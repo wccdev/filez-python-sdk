@@ -32,11 +32,7 @@ class Filez(object):
             用户token数据
         """
         # 设置 Authorization
-        authorization = base64.b64encode(
-            (
-                self.config.get("app_key", "") + ":" + self.config.get("app_secret", "")
-            ).encode("utf-8")
-        ).decode("utf-8")
+        authorization = base64.b64encode((self.config.get("app_key", "") + ":" + self.config.get("app_secret", "")).encode("utf-8")).decode("utf-8")
 
         # 设置payload
         payload = {'grant_type': 'client_with_su', 'scope': 'all', 'slug': slug}
@@ -66,15 +62,16 @@ class Filez(object):
             raise Exception("token数据异常")
         self.access_token = token_data.get("access_token")
 
-
     # 用于检查token是否存在
     def check_token(func):
         def wrapper(self, *args, **kwargs):
             if not self.access_token:
                 raise Exception("请先获取token")
             return func(self, *args, **kwargs)
+
         return wrapper
 
+    ############################# 用户相关接口 #############################
     @check_token
     def user_create(self, url: str, user: UserInfo) -> dict:
         """创建用户.
@@ -164,6 +161,9 @@ class Filez(object):
         if url[-1] == "/":
             url = url[:-1]
 
+        if uid is None and user_slug is None:
+            raise Exception("uid和user_slug不能同时为空")
+
         # 如果有uid则使用uid获取用户信息
         if uid:
             url = url + "/" + str(uid)
@@ -238,7 +238,7 @@ class Filez(object):
         url = url + "?page_num=" + str(page_num) + "&page_size=" + str(page_size)
 
         headers = {
-            'Authorization': 'Bearer '+self.access_token,
+            'Authorization': 'Bearer ' + self.access_token,
         }
         try:
             response = requests.request("GET", url, headers=headers)
@@ -253,8 +253,10 @@ class Filez(object):
 
         return response.json()
 
+    ############################# 团队相关接口 #############################
+
     @check_token
-    def team_list(self,url):
+    def team_list(self, url):
         """获取团队列表.
 
         Examples:
@@ -290,7 +292,7 @@ class Filez(object):
             }
         """
         headers = {
-            'Authorization': 'Bearer '+self.access_token,
+            'Authorization': 'Bearer ' + self.access_token,
         }
         try:
             response = requests.request("GET", url, headers=headers)
@@ -306,7 +308,7 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def team_info(self,url,tid:int):
+    def team_info(self, url, tid: int):
         """获取团队信息.
 
         Examples:
@@ -336,7 +338,7 @@ class Filez(object):
         url = url + str(tid)
 
         headers = {
-            'Authorization': 'Bearer '+self.access_token,
+            'Authorization': 'Bearer ' + self.access_token,
         }
 
         try:
@@ -353,7 +355,7 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def team_user_list(self,url,tid:int,page_num:int,page_size:int):
+    def team_user_list(self, url, tid: int, page_num: int, page_size: int):
         """获取团队用户列表.
 
         Examples:
@@ -400,11 +402,11 @@ class Filez(object):
         if url[-1] != "/":
             url = url + "/"
 
-        #http://xxx/v2/api/teamuser/2/users?page_num=0&page_size=50
+        # http://xxx/v2/api/teamuser/2/users?page_num=0&page_size=50
         url = url + str(tid) + "/users?page_num=" + str(page_num) + "&page_size=" + str(page_size)
 
         headers = {
-            'Authorization': 'Bearer '+self.access_token,
+            'Authorization': 'Bearer ' + self.access_token,
         }
 
         try:
@@ -420,5 +422,180 @@ class Filez(object):
 
         return response.json()
 
+    ############################# 文件相关接口 #############################
+    @check_token
+    def file_list(self, url: str, path: str, page_num: int, page_size: int):
+        """获取文件列表
 
+        Examples:
+            >>> file_list(url,path,page_num,page_size)
 
+        Args:
+            url:        filez获取文件列表的接口地址   例如：http://filez.xxx.com:3333/v2/api/file
+            path:       文件路径
+            page_num:   页码 从0开始
+            page_size:  每页条数
+
+        Returns:
+            文件列表
+            {
+                "errcode": 0,
+                "errmsg": "ok",
+                "fileModelList": [
+                    {
+                        "bookmarkId": null,
+                        "creator": "我",
+                        "creatorUid": 4,
+                        "deliveryCode": "",
+                        "desc": "",
+                        "dir": false,
+                        "isBookmark": false,
+                        "isTeam": null,
+                        "modified": "2022-12-05T17:19:39+0800",
+                        "neid": 1599694982598365196,
+                        "nsid": 1,
+                        "path": "xx.docx",
+                        "pathType": "ent",
+                        "rev": "48a728b380074a20852eb27d2ada442c",
+                        "size": "200.9 KB",
+                        "supportPreview": true,
+                        "updator": "我",
+                        "updatorUid": 4
+                    },
+                    {
+                        "bookmarkId": null,
+                        "creator": "我",
+                        "creatorUid": 4,
+                        "deliveryCode": "",
+                        "desc": "",
+                        "dir": true,
+                        "isBookmark": false,
+                        "isTeam": false,
+                        "modified": "2022-01-09T15:25:09+0800",
+                        "neid": 1571031914175795279,
+                        "nsid": 1,
+                        "path": "/demo1/aa1",
+                        "pathType": "ent",
+                        "rev": "",
+                        "size": "0.0 bytes",
+                        "supportPreview": false,
+                        "updator": "我",
+                        "updatorUid": 4
+                    }
+                ],
+                "total": 2
+            }
+        """
+        if url[-1] == "/":
+            url = url[:-1]
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        payload = {'path': path, 'path_type': 'ent', 'page_num': page_num, 'page_size': page_size}
+
+        try:
+            response = requests.request("POST", url, headers=headers, data=payload)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.json().get("errmsg"))
+
+        return response.json()
+
+    @check_token
+    def file_info(self, url: str, neid: str = None, nsid: int = None, path: str = None) -> dict:
+        """获取文件信息
+        通过neid 或者 文件路径 获取文件信息
+
+        Examples:
+            >>> file_info(url,neid,path)
+
+        Args:
+            url:    filez获取文件信息的接口地址   例如：http://filez.xxx.com:333/v2/api/file/path
+            neid:   文件neid
+            path:   文件路径
+
+        Returns:
+            文件信息
+            {
+                "errcode": 0,
+                "errmsg": "ok",
+                "fileModel": {
+                    "bookmarkId": null,
+                    "creator": "我",
+                    "creatorUid": 4,
+                    "deliveryCode": "",
+                    "desc": "",
+                    "dir": false,
+                    "isBookmark": false,
+                    "isTeam": null,
+                    "modified": "2022-12-05T17:19:39+0800",
+                    "neid": 1599694982598365196,
+                    "nsid": 1,
+                    "path": "xx.docx",
+                    "pathType": "ent",
+                    "rev": "48a728b380074a20852eb27d2ada442c",
+                    "size": "200.9 KB",
+                    "supportPreview": true,
+                    "updator": "我",
+                    "updatorUid": 4
+                }
+            }
+        """
+        if url[-1] == "/":
+            url = url[:-1]
+
+        if neid is None and path is None:
+            raise Exception("neid和path不能同时为空")
+
+        if neid is not None:
+            if nsid is None:
+                nsid = 1 # 做一次默认值处理
+            url = url + "/" + str(neid) + "/?nsid=" + str(nsid)
+        else:
+            url = url + "/path"
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        if neid is None:
+            payload = {'path': path, 'path_type': 'ent'}
+
+            try:
+                response = requests.request("POST", url, headers=headers, data=payload)
+            except ConnectionError:
+                # print(e)
+                raise Exception("url检测异常，请检查url是否正确")
+            except Exception:
+                raise Exception("未知异常")
+
+        else:
+            try:
+                response = requests.request("GET", url, headers=headers)
+            except ConnectionError:
+                # print(e)
+                raise Exception("url检测异常，请检查url是否正确")
+            except Exception:
+                raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.json().get("errmsg"))
+
+        return response.json()
+
+    @check_token
+    def file_delete(
+        self,
+        url: str,
+        neid: str = None,
+    ):
+        pass
