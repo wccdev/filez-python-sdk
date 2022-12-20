@@ -10,7 +10,7 @@ class Filez(object):
         """初始化.
 
         Args:
-            config: 包含app_key,app_secret的字典 例如{"app_key":"xxx","app_secret":"
+            config: 包含app_key,app_secret的字典 例如{"app_key":"xxx","app_secret":"xxx"}
         """
         # 检查配置文件是否正确
         if not config.get("app_key") or not config.get("app_secret"):
@@ -520,6 +520,7 @@ class Filez(object):
         Args:
             url:    filez获取文件信息的接口地址   例如：http://filez.xxx.com:333/v2/api/file/path
             neid:   文件neid
+            nsid:   空间id
             path:   文件路径
 
         Returns:
@@ -593,9 +594,49 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def file_delete(
-        self,
-        url: str,
-        neid: str = None,
-    ):
-        pass
+    def file_delete(self, url: str,neid: str = None, nsid: int = None) -> dict:
+        """
+        通过neid 删除文件
+
+        Examples:
+            >>> file_delete(neid,nsid)
+
+        Args:
+            url:    filez删除文件的接口地址   例如：http://filez.xxx.com:333/v2/api/file
+            neid:   文件neid
+            nsid:   空间id
+
+        Returns:
+            删除结果
+            {
+                "errcode": 0,
+                "errmsg": "ok"
+            }
+        """
+        if url[-1] == "/":
+            url = url[:-1]
+
+        if neid is None:
+            raise Exception("neid不能为空")
+
+        if nsid is None:
+            nsid = 1 # 做一次默认值处理
+            url = url + "/" + str(neid) + "?nsid=" + str(nsid)
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        try:
+            response = requests.request("DELETE", url, headers=headers)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.json().get("errmsg"))
+
+        return response.json()
