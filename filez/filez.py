@@ -558,7 +558,7 @@ class Filez(object):
 
         if neid is not None:
             if nsid is None:
-                nsid = 1 # 做一次默认值处理
+                nsid = 1  # 做一次默认值处理
             url = url + "/" + str(neid) + "/?nsid=" + str(nsid)
         else:
             url = url + "/path"
@@ -594,7 +594,7 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def file_delete(self, url: str,neid: str = None, nsid: int = None) -> dict:
+    def file_delete(self, url: str, neid: str = None, nsid: int = None) -> dict:
         """
         通过neid 删除文件
 
@@ -620,8 +620,9 @@ class Filez(object):
             raise Exception("neid不能为空")
 
         if nsid is None:
-            nsid = 1 # 做一次默认值处理
-            url = url + "/" + str(neid) + "?nsid=" + str(nsid)
+            nsid = 1  # 做一次默认值处理
+
+        url = url + "/" + str(neid) + "?nsid=" + str(nsid)
 
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -629,6 +630,7 @@ class Filez(object):
         }
 
         try:
+            print(url)
             response = requests.request("DELETE", url, headers=headers)
         except ConnectionError:
             # print(e)
