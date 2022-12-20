@@ -2,37 +2,52 @@ import base64
 
 import requests
 
-from .schema import UserInfo
+from .schema import ConfigInfo, UserInfo
 
 
 class Filez(object):
-    def __init__(self, config: dict):
-        """初始化.
-
-        Args:
-            config: 包含app_key,app_secret的字典 例如{"app_key":"xxx","app_secret":"xxx"}
+    def __init__(self, config: ConfigInfo):
+        """
+        初始化
         """
         # 检查配置文件是否正确
-        if not config.get("app_key") or not config.get("app_secret"):
+        if (
+            not config.get("app_key")
+            or not config.get("app_secret")
+            or not config.get("host")
+        ):
             raise Exception("配置文件错误")
 
         self.config = config
         self.access_token = None
 
-    def token(self, url: str, slug: str):
+        # base_url
+        self.base_url = (
+            "http"
+            + ("s" if config.get("https") else "")
+            + "://"
+            + config.get("host")
+            + "/"
+            + config.get("version")
+        )
+
+    def token(self, slug: str):
         """获取用户token数据.
 
         Examples:
-            >>> token('url', 'slug')
+            >>> token('slug')
         Args:
-            url:    filez获取token的接口地址   例如：http://filez.xxx.cn:5555/v2/oauth/token
             slug:   登录用户名   例如：admin
 
         Returns:
             用户token数据
         """
         # 设置 Authorization
-        authorization = base64.b64encode((self.config.get("app_key", "") + ":" + self.config.get("app_secret", "")).encode("utf-8")).decode("utf-8")
+        authorization = base64.b64encode(
+            (
+                self.config.get("app_key", "") + ":" + self.config.get("app_secret", "")
+            ).encode("utf-8")
+        ).decode("utf-8")
 
         # 设置payload
         payload = {'grant_type': 'client_with_su', 'scope': 'all', 'slug': slug}
@@ -42,6 +57,8 @@ class Filez(object):
             'Content-Type': 'application/x-www-form-urlencoded',
             'Authorization': 'Basic ' + authorization,
         }
+
+        url = self.base_url + "/oauth/token"
 
         # 发送请求
         try:
@@ -73,11 +90,11 @@ class Filez(object):
 
     ############################# 用户相关接口 #############################
     @check_token
-    def user_create(self, url: str, user: UserInfo) -> dict:
+    def user_create(self, user: UserInfo) -> dict:
         """创建用户.
 
         Examples:
-            >>> user_create(url, user)
+            >>> user_create(user)
 
         Args:
             url:        filez创建用户的接口地址   例如：http://filez.xxx.cn:5555/v2/user
@@ -103,6 +120,9 @@ class Filez(object):
             'Authorization': 'Bearer ' + self.access_token,
         }
         payload = user.dict()
+
+        url = self.base_url + "/user"
+
         try:
             response = requests.request("POST", url, headers=headers, data=payload)
         except ConnectionError:
@@ -117,15 +137,14 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def user_info(self, url: str, uid: int = None, user_slug: str = None) -> dict:
+    def user_info(self, uid: int = None, user_slug: str = None) -> dict:
         """获取用户信息.
         通过用户id或者用户slug获取用户信息
 
         Examples:
-            >>> user_info(url, uid, user_slug)
+            >>> user_info(uid, user_slug)
 
         Args:
-            url:        filez获取用户信息的接口地址   例如：http://filez.xxx.com:3333/v2/api/user
             uid:        用户id
             user_slug:  用户slug
 
@@ -158,8 +177,7 @@ class Filez(object):
         """
 
         # url最后如果有/，则去掉
-        if url[-1] == "/":
-            url = url[:-1]
+        url = self.base_url + "/api/user"
 
         if uid is None and user_slug is None:
             raise Exception("uid和user_slug不能同时为空")
@@ -189,14 +207,13 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def user_list(self, url: str, page_num: int, page_size: int) -> dict:
+    def user_list(self, page_num: int, page_size: int) -> dict:
         """获取用户列表.
 
         Examples:
-            >>> user_list(url,page_num,page_size)
+            >>> user_list(page_num,page_size)
 
         Args:
-            url:        filez获取用户列表的接口地址   例如：http://filez.xxx.com:3333/v2/api/user
             page_num:   页码 从0开始
             page_size:  每页条数
 
@@ -231,9 +248,8 @@ class Filez(object):
             }
         """
 
-        # url最后如果没有/，则添加/
-        if url[-1] != "/":
-            url = url + "/"
+        # url
+        url = self.base_url + "/api/user"
 
         url = url + "?page_num=" + str(page_num) + "&page_size=" + str(page_size)
 
@@ -256,14 +272,13 @@ class Filez(object):
     ############################# 团队相关接口 #############################
 
     @check_token
-    def team_list(self, url):
+    def team_list(self):
         """获取团队列表.
 
         Examples:
-            >>> team_list(url)
+            >>> team_list()
 
         Args:
-            url:        filez获取团队列表的接口地址   例如：http://filez.xxx.com:3333/v2/api/team
 
         Returns:
             团队列表
@@ -291,6 +306,8 @@ class Filez(object):
                 "total": 2
             }
         """
+        url = self.base_url + "/api/team"
+
         headers = {
             'Authorization': 'Bearer ' + self.access_token,
         }
@@ -308,7 +325,7 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def team_info(self, url, tid: int):
+    def team_info(self, tid: int):
         """获取团队信息.
 
         Examples:
@@ -331,11 +348,8 @@ class Filez(object):
                 "used": 40142023
             }
         """
-        # url最后如果没有/，则添加/
-        if url[-1] != "/":
-            url = url + "/"
-
-        url = url + str(tid)
+        # url
+        url = self.base_url + "/api/team/" + str(tid)
 
         headers = {
             'Authorization': 'Bearer ' + self.access_token,
@@ -355,14 +369,13 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def team_user_list(self, url, tid: int, page_num: int, page_size: int):
+    def team_user_list(self, tid: int, page_num: int, page_size: int):
         """获取团队用户列表.
 
         Examples:
-            >>> team_user_list(url,tid,page_num,page_size)
+            >>> team_user_list(tid,page_num,page_size)
 
         Args:
-            url:        filez获取团队用户列表的接口地址   例如：http://filez.xxx.com:3333/v2/api/teamuser/
             tid:        团队id
             page_num:   页码 从0开始
             page_size:  每页条数
@@ -399,11 +412,17 @@ class Filez(object):
                 "total": 2
             }
         """
-        if url[-1] != "/":
-            url = url + "/"
+        url = self.base_url + "/api/teamuser/"
 
         # http://xxx/v2/api/teamuser/2/users?page_num=0&page_size=50
-        url = url + str(tid) + "/users?page_num=" + str(page_num) + "&page_size=" + str(page_size)
+        url = (
+            url
+            + str(tid)
+            + "/users?page_num="
+            + str(page_num)
+            + "&page_size="
+            + str(page_size)
+        )
 
         headers = {
             'Authorization': 'Bearer ' + self.access_token,
@@ -424,14 +443,13 @@ class Filez(object):
 
     ############################# 文件相关接口 #############################
     @check_token
-    def file_list(self, url: str, path: str, page_num: int, page_size: int):
+    def file_list(self, path: str, page_num: int, page_size: int):
         """获取文件列表
 
         Examples:
-            >>> file_list(url,path,page_num,page_size)
+            >>> file_list(path,page_num,page_size)
 
         Args:
-            url:        filez获取文件列表的接口地址   例如：http://filez.xxx.com:3333/v2/api/file
             path:       文件路径
             page_num:   页码 从0开始
             page_size:  每页条数
@@ -486,15 +504,19 @@ class Filez(object):
                 "total": 2
             }
         """
-        if url[-1] == "/":
-            url = url[:-1]
+        url = self.base_url + "/api/file"
 
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Authorization': 'Bearer ' + self.access_token,
         }
 
-        payload = {'path': path, 'path_type': 'ent', 'page_num': page_num, 'page_size': page_size}
+        payload = {
+            'path': path,
+            'path_type': 'ent',
+            'page_num': page_num,
+            'page_size': page_size,
+        }
 
         try:
             response = requests.request("POST", url, headers=headers, data=payload)
@@ -510,15 +532,14 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def file_info(self, url: str, neid: str = None, nsid: int = None, path: str = None) -> dict:
+    def file_info(self, neid: str = None, nsid: int = None, path: str = None) -> dict:
         """获取文件信息
         通过neid 或者 文件路径 获取文件信息
 
         Examples:
-            >>> file_info(url,neid,path)
+            >>> file_info(neid,path)
 
         Args:
-            url:    filez获取文件信息的接口地址   例如：http://filez.xxx.com:333/v2/api/file/path
             neid:   文件neid
             nsid:   空间id
             path:   文件路径
@@ -550,8 +571,7 @@ class Filez(object):
                 }
             }
         """
-        if url[-1] == "/":
-            url = url[:-1]
+        url = self.base_url + "/api/file"
 
         if neid is None and path is None:
             raise Exception("neid和path不能同时为空")
@@ -594,7 +614,7 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def file_delete(self, url: str, neid: str = None, nsid: int = None) -> dict:
+    def file_delete(self, neid: str = None, nsid: int = None) -> dict:
         """
         通过neid 删除文件
 
@@ -602,7 +622,6 @@ class Filez(object):
             >>> file_delete(neid,nsid)
 
         Args:
-            url:    filez删除文件的接口地址   例如：http://filez.xxx.com:333/v2/api/file
             neid:   文件neid
             nsid:   空间id
 
@@ -613,8 +632,7 @@ class Filez(object):
                 "errmsg": "ok"
             }
         """
-        if url[-1] == "/":
-            url = url[:-1]
+        url = self.base_url + "/api/file"
 
         if neid is None:
             raise Exception("neid不能为空")
@@ -642,3 +660,44 @@ class Filez(object):
             raise Exception(response.json().get("errmsg"))
 
         return response.json()
+
+    @check_token
+    def create_folder(self, path: str, path_type: str = None) -> dict:
+        """
+        创建文件夹
+
+        Examples:
+            >>> create_folder(path,path_type)
+
+        Args:
+            url:    filez创建文件夹的接口地址   例如：http://filez.xxx.com:333/v2/api/file/folder
+            path:   文件夹路径
+            nsid:   选择范围 ['ent', 'self'], ent 企业空间，self 个人空间
+
+        Returns:
+            创建结果
+            {
+                "creator": "",
+                "creatorUid": 4,
+                "desc": "",
+                "dir": true,
+                "errcode": 0,
+                "errmsg": "ok",
+                "modified": "2022-12-20 15:18:00",
+                "neid": 1605100184113516618,
+                "nsid": 1,
+                "path": "/demo2/dir1/dir2",
+                "pathType": "ent",
+                "rev": "",
+                "size": "",
+                "updator": "",
+                "updatorUid": 4
+            }
+        """
+        # url = self.base_url + "/api/file/folder"
+        #
+        # if path_type is None:
+        #     path_type = "ent"
+
+        # headers = {
+        pass

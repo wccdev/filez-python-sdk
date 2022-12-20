@@ -5,6 +5,14 @@ from pydantic import BaseModel
 # from datetime import datetime
 
 
+class ConfigInfo(BaseModel):
+    app_key: str  # 应用key
+    app_secret: str  # 应用secret
+    https: bool = False  # 是否使用https
+    host: str  # filez服务地址"filez.xxx.cn:3334"
+    version: str = "v2"  # 版本号
+
+
 class UserInfo(BaseModel):
     email: str  # required unique
     mobile: Optional[str] = None
