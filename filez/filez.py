@@ -1,6 +1,8 @@
 import base64
+import os
 
 import requests
+from urllib3 import encode_multipart_formdata
 
 from .schema import ConfigInfo, UserInfo
 
@@ -71,7 +73,7 @@ class Filez(object):
 
         # 检查返回值
         if response.status_code != 200:
-            raise Exception(response.json().get("error"))
+            raise Exception(response.text)
 
         # 解析token数据
         token_data = response.json()
@@ -132,7 +134,7 @@ class Filez(object):
             raise Exception("未知异常")
 
         if response.status_code != 200:
-            raise Exception(response.json().get("errmsg"))
+            raise Exception(response.text)
 
         return response.json()
 
@@ -202,7 +204,7 @@ class Filez(object):
             raise Exception("未知异常")
 
         if response.status_code != 200:
-            raise Exception(response.json().get("errmsg"))
+            raise Exception(response.text)
 
         return response.json()
 
@@ -265,7 +267,7 @@ class Filez(object):
             raise Exception("未知异常")
 
         if response.status_code != 200:
-            raise Exception(response.json().get("errmsg"))
+            raise Exception(response.text)
 
         return response.json()
 
@@ -320,7 +322,7 @@ class Filez(object):
             raise Exception("未知异常")
 
         if response.status_code != 200:
-            raise Exception(response.json().get("errmsg"))
+            raise Exception(response.text)
 
         return response.json()
 
@@ -364,7 +366,7 @@ class Filez(object):
             raise Exception("未知异常")
 
         if response.status_code != 200:
-            raise Exception(response.json().get("errmsg"))
+            raise Exception(response.text)
 
         return response.json()
 
@@ -437,7 +439,7 @@ class Filez(object):
             raise Exception("未知异常")
 
         if response.status_code != 200:
-            raise Exception(response.json().get("errmsg"))
+            raise Exception(response.text)
 
         return response.json()
 
@@ -527,7 +529,7 @@ class Filez(object):
             raise Exception("未知异常")
 
         if response.status_code != 200:
-            raise Exception(response.json().get("errmsg"))
+            raise Exception(response.text)
 
         return response.json()
 
@@ -609,7 +611,7 @@ class Filez(object):
                 raise Exception("未知异常")
 
         if response.status_code != 200:
-            raise Exception(response.json().get("errmsg"))
+            raise Exception(response.text)
 
         return response.json()
 
@@ -657,7 +659,7 @@ class Filez(object):
             raise Exception("未知异常")
 
         if response.status_code != 200:
-            raise Exception(response.json().get("errmsg"))
+            raise Exception(response.text)
 
         return response.json()
 
@@ -694,10 +696,216 @@ class Filez(object):
                 "updatorUid": 4
             }
         """
-        # url = self.base_url + "/api/file/folder"
-        #
-        # if path_type is None:
-        #     path_type = "ent"
+        url = self.base_url + "/api/file/folder"
 
-        # headers = {
-        pass
+        if path_type is None:
+            path_type = "ent"
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        payload = {'path': path, 'path_type': path_type}
+
+        try:
+            response = requests.request("POST", url, headers=headers, data=payload)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+        return response.json()
+
+    @check_token
+    def file_copy(
+        self, from_nsid: int, from_neid: str, to_path: str, to_path_type: str = None
+    ) -> dict:
+        """
+        文件复制
+
+        Examples:
+            >>> file_copy(from_nsid,from_neid,to_path,to_path_type)
+
+        Args:
+            from_nsid:  源文件空间id
+            from_neid:  源文件neid
+            to_path:    目标文件路径
+            to_path_type:   目标文件路径类型
+
+        Returns:
+            复制结果
+            {
+                "creator": "我",
+                "creatorUid": 4,
+                "desc": "",
+                "dir": false,
+                "errcode": 0,
+                "errmsg": "ok",
+                "modified": "2022-12-21 10:52:07",
+                "neid": 1605395663741259776,
+                "nsid": 1,
+                "path": "/demo3/dd2/313.doc",
+                "pathType": "ent",
+                "rev": "abb44e2a31124c018a6062798eb6bd10",
+                "size": "10.07 KB",
+                "updator": "我",
+                "updatorUid": 4
+            }
+        """
+        url = self.base_url + "/api/file/copy"
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        if to_path_type is None:
+            to_path_type = "ent"
+
+        payload = {
+            'nsid': from_nsid,
+            'from_neid': from_neid,
+            'to_path': to_path,
+            'to_path_type': to_path_type,
+        }
+
+        try:
+            response = requests.request("POST", url, headers=headers, data=payload)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+        return response.json()
+
+    @check_token
+    def file_move(
+        self, from_nsid: int, from_neid: str, to_path: str, to_path_type: str = None
+    ) -> dict:
+        """
+        文件移动
+
+        Examples:
+            >>> file_move(from_nsid,from_neid,to_path,to_path_type)
+
+        Args:
+            from_nsid:  源文件空间id
+            from_neid:  源文件neid
+            to_path:    目标文件路径
+            to_path_type:   目标文件路径类型
+
+        Returns:
+            移动结果
+            {
+                "errcode": 0,
+                "errmsg": "ok"
+            }
+
+        """
+        url = self.base_url + "/api/file/move"
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        if to_path_type is None:
+            to_path_type = "ent"
+
+        payload = {
+            'nsid': from_nsid,
+            'from_neid': from_neid,
+            'to_path': to_path,
+            'to_path_type': to_path_type,
+        }
+
+        try:
+            response = requests.request("POST", url, headers=headers, data=payload)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+        return response.json()
+
+    @check_token
+    def file_upload(self, file_path: str, to_path: str, path_type: str = None) -> dict:
+        """
+        文件上传(单文件)
+
+        Examples:
+            >>> file_upload(file_path, to_path, path_type)
+
+        Args:
+            file_path:  文件路径
+            to_path:    目标文件路径
+            path_type:  目标文件路径类型
+
+        Returns:
+            上传结果
+            {
+                "creator": "",
+                "creatorUid": 4,
+                "desc": "",
+                "dir": false,
+                "errcode": 0,
+                "errmsg": "ok",
+                "modified": "2022-12-21T11:11:00+0800",
+                "neid": 1605400413375303763,
+                "nsid": 1,
+                "path": "/file001/a1.xlsx",
+                "pathType": "ent",
+                "rev": "d8c4f24f5370425f8b170c7eb5a41158",
+                "size": "13.7 KB",
+                "updator": "",
+                "updatorUid": 4
+            }
+        """
+        url = self.base_url + "/api/file/content"
+
+        if path_type is None:
+            path_type = "ent"
+
+        # 检查文件是否存在
+        if not os.path.exists(file_path):
+            raise Exception("文件不存在")
+
+        file_data = {
+            'filedata': (os.path.basename(file_path), open(file_path, 'rb').read()),
+            'path_type': path_type,
+            'path': to_path,
+        }
+
+        encode_data = encode_multipart_formdata(file_data)
+        data = encode_data[0]
+
+        headers = {
+            'Content-Type': encode_data[1],
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        try:
+            response = requests.request("POST", url, headers=headers, data=data)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+        return response.json()
