@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://www.filez.com/">
-    <img src="https://raw.githubusercontent.com/wccdev/filez-python-sdk/master/.github/assets/logo-black.png" height="43" width="190" margin="50" alt="Python SDK For FileZ">
+    <img src="https://raw.githubusercontent.com/wccdev/filez-python-sdk/master/.github/assets/logo-black.png" height="43" width="120" margin="50" alt="Python SDK For FileZ">
     </a>
 </p>
 <p align="center">
