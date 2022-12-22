@@ -1,4 +1,5 @@
 import base64
+import json
 import os
 
 import requests
@@ -899,6 +900,415 @@ class Filez(object):
 
         try:
             response = requests.request("POST", url, headers=headers, data=data)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+        return response.json()
+
+    @check_token
+    def file_rename(self, nsid: int, from_neid: str, to_file_name: str) -> dict:
+        """
+        文件重命名
+
+        Examples:
+            >>> file_rename(nsid, from_neid, to_file_name)
+
+        Args:
+            nsid:               文件空间id
+            from_neid:          文件neid
+            to_file_name:       新文件名
+
+        Returns:
+            重命名结果
+            {
+                "errcode": 0,
+                "errmsg": "ok"
+            }
+        """
+        url = self.base_url + "/api/file/rename"
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        payload = {
+            'nsid': nsid,
+            'from_neid': from_neid,
+            'to_file_name': to_file_name,
+        }
+
+        try:
+            response = requests.request("POST", url, headers=headers, data=payload)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+        return response.json()
+
+    @check_token
+    def file_history(self, nsid: int, neid: str) -> dict:
+        """
+        文件历史版本
+
+        Examples:
+            >>> file_history(nsid, neid)
+
+        Args:
+            nsid:   文件空间id
+            neid:   文件neid
+
+        Returns:
+            文件历史版本
+            {
+                "errcode": 0,
+                "errmsg": "ok",
+                "revisionModelList": [
+                    {
+                        "bytes": 14018,
+                        "dir": false,
+                        "hash": "f0fc246d3cf09e3842fea5dbc9bb57e1",
+                        "isDeleted": false,
+                        "modified": "2022-12-21T14:43:41+0800",
+                        "op": "create",
+                        "path": "/file001/a3.xlsx",
+                        "rev": "0619c04dcc144938b11779a4b3a820da",
+                        "root": "databox",
+                        "user": "管理员",
+                        "utime": 1671605021000,
+                        "version": "v1"
+                    },
+                    {
+                        "bytes": 9653,
+                        "dir": false,
+                        "hash": "e2271374a796f19f18bd17a0b2da65b1",
+                        "isDeleted": false,
+                        "modified": "2022-12-22T13:53:30+0800",
+                        "op": "update",
+                        "path": "/file001/a3.xlsx",
+                        "rev": "5de540139dd5e04f",
+                        "root": "databox",
+                        "user": "管理员",
+                        "utime": 1671688410000,
+                        "version": "v2"
+                    }
+                ]
+            }
+        """
+        url = self.base_url + "/api/file/" + str(neid) + "/revision?nsid=" + str(nsid)
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        try:
+            response = requests.request("GET", url, headers=headers)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+        return response.json()
+
+    @check_token
+    def file_preview(self, nsid: int, neid: str) -> dict:
+        """
+        文件预览
+
+        Examples:
+            >>> file_preview(nsid, neid)
+
+        Args:
+            nsid:   文件空间id
+            neid:   文件neid
+
+        Returns:
+            文件预览
+            {
+                "errcode": 0,
+                "errmsg": "ok",
+                "previewUrl": "https://filz.xx.com/preview/preview?nsid=123&neid=123&version=v1" # noqa
+            }
+        """
+        url = self.base_url + "/api/preview/" + str(neid) + "?nsid=" + str(nsid)
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        try:
+            response = requests.request("GET", url, headers=headers)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+        return response.json()
+
+    @check_token
+    def file_download(self, nsid: int, neid: str) -> dict:
+        """
+        文件下载
+
+        Examples:
+            >>> file_download(nsid, neid)
+
+        Args:
+            nsid:   文件空间id
+            neid:   文件neid
+
+        Returns:
+            文件下载
+            {
+                "errcode": 0,
+                "errmsg": "ok",
+                "downloadUrl": "https://filz.xx.com/download?nsid=123&neid=123&version=v1"  # noqa
+            }
+        """
+        url = (
+            self.base_url
+            + "/api/file/content/download?neid="
+            + str(neid)
+            + "&nsid="
+            + str(nsid)
+        )
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        try:
+            response = requests.request("GET", url, headers=headers)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+        # 保存文件
+        return response.content
+
+    ############################# 权限相关接口 #############################
+    @check_token
+    def auth_create(
+        self, nsid: int, path_type: str, neid: str, uid: int, privilege: int
+    ) -> dict:
+        """
+        文件授权
+
+        Examples:
+            >>> auth_create(nsid, path_type,neid, uid, privilege)
+
+        Args:
+            nsid:       文件空间id
+            path_type:  文件类型 [ent,self]
+            neid:       文件neid
+            uid:        用户id
+            privilege:  权限 预览: 2009,上传: 2007,下载: 2005,上传/下载: 2003,编辑: 2001,可见列表: 1011,禁止访问: 1000 # noqa
+
+        Returns:
+            文件授权
+            {
+                "authModelList": null,
+                "errcode": 0,
+                "errmsg": "ok"
+            }
+        """
+        url = self.base_url + "/api/auth/batch_create"
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        if path_type not in ['ent', 'self']:
+            raise Exception("path_type参数错误")
+
+        if privilege not in [2009, 2007, 2005, 2003, 2001, 1011, 1000]:
+            raise Exception("privilege参数错误")
+
+        payload = {
+            'nsid': nsid,
+            'path_type': path_type,
+            'file_list': json.dumps([{"neid": neid}]),
+            'auth_list': json.dumps(
+                [
+                    {
+                        "agentId": uid,
+                        "agentType": "user",
+                        "isSubteamInheritable": True,
+                        "privilegeType": privilege,
+                    }
+                ]
+            ),
+        }
+
+        try:
+            response = requests.request("POST", url, headers=headers, data=payload)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+        return response.json()
+
+    @check_token
+    def auth_delete(self, nsid: int, path_type: str, neid: str, uid: int) -> dict:
+        """
+        文件取消授权
+
+        Examples:
+            >>> auth_delete(nsid, path_type,neid, uid)
+
+        Args:
+            nsid:       文件空间id
+            path_type:  文件类型 [ent,self]
+            neid:       文件neid
+            uid:        用户id
+
+        Returns:
+            文件取消授权
+            {
+                'errcode': 0,
+                'errmsg': 'ok',
+                'resultList': [{
+                    'errmsg': 'ok',
+                    'path': '/filepath/001',
+                    'result': 'succeed'
+                }]
+            }
+        """
+        url = self.base_url + "/api/auth/batch_delete"
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        if path_type not in ['ent', 'self']:
+            raise Exception("path_type参数错误")
+
+        payload = {
+            'nsid': nsid,
+            'path_type': path_type,
+            'file_list': json.dumps([{"neid": neid}]),
+            'delete_list': json.dumps([{"agentId": uid, "agentType": "user"}]),
+        }
+
+        try:
+            response = requests.request("DELETE", url, headers=headers, data=payload)
+        except ConnectionError:
+            # print(e)
+            raise Exception("url检测异常，请检查url是否正确")
+        except Exception:
+            raise Exception("未知异常")
+
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+        return response.json()
+
+    @check_token
+    def auth_list(self, nsid: int, path_type: str, neid: str) -> dict:
+        """
+        文件授权列表
+
+        Examples:
+            >>> auth_list(nsid, path_type,neid)
+
+        Args:
+            nsid:       文件空间id
+            path_type:  文件类型 [ent,self]
+            neid:       文件neid
+
+        Returns:
+            文件授权列表
+            {
+                "authFileList": [
+                    {
+                        "authList": [
+                            {
+                                "agentId": 130,
+                                "agentName": "陈郭",
+                                "agentType": "user",
+                                "allowedMask": "3073",
+                                "id": 14322,
+                                "isSubteamInheritable": true,
+                                "isTeam": false,
+                                "nsid": 1,
+                                "path": "/file001",
+                                "privilegeId": 2009,
+                                "privilegeName": "preview"
+                            },
+                            {
+                                "agentId": 94,
+                                "agentName": "陈超",
+                                "agentType": "user",
+                                "allowedMask": "3613",
+                                "id": 14323,
+                                "isSubteamInheritable": true,
+                                "isTeam": false,
+                                "nsid": 1,
+                                "path": "/file001",
+                                "privilegeId": 2005,
+                                "privilegeName": "download"
+                            }
+                        ],
+                        "inheritAuthList": [],
+                        "path": "/file001"
+                    }
+                ],
+                "errcode": 0,
+                "errmsg": "ok"
+            }
+        """
+        url = self.base_url + "/api/auth/list"
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + self.access_token,
+        }
+
+        if path_type not in ['ent', 'self']:
+            raise Exception("path_type参数错误")
+
+        payload = {
+            'nsid': nsid,
+            'path_type': path_type,
+            'file_list': json.dumps([{"neid": neid}]),
+        }
+
+        try:
+            response = requests.request("POST", url, headers=headers, data=payload)
         except ConnectionError:
             # print(e)
             raise Exception("url检测异常，请检查url是否正确")
