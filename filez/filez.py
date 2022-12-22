@@ -1,3 +1,35 @@
+"""Python版FileZ的操作接口.
+
+#### 用户相关接口
+    - user_create 创建用户
+    - user_info 获取用户信息
+    - user_list 获取用户列表
+
+#### 团队相关接口
+    - team_list 获取团队列表
+    - team_info 获取团队信息
+    - team_user_list 获取团队成员列表
+
+#### 文件相关接口
+    - file_list 获取指定目录的文件列表
+    - file_info 获取文件信息
+    - file_delete 删除文件
+    - create_folder 创建文件夹
+    - file_copy 复制文件
+    - file_move 移动文件
+    - file_upload 上传文件
+    - file_rename 重命名文件
+    - file_history 文件历史版本
+    - file_preview 文件预览
+    - file_download 文件下载
+
+#### 授权相关接口
+    - auth_create 文件授权
+    - auth_delete 取消文件授权
+    - auth_list 获取文件授权列表
+
+"""
+
 import base64
 import json
 import os
@@ -12,6 +44,18 @@ class Filez(object):
     def __init__(self, config: ConfigInfo):
         """
         初始化
+
+        Examples:
+            >>> filez = Filez(
+            >>>        {
+            >>>            "app_key": "94b4b6c69e404c2896382d8e0c91121",
+            >>>            "app_secret": "51661ca0-38d1-4c87-8805-794211292",
+            >>>            "https": False,
+            >>>            "host": "filez.xxx.com:3333",
+            >>>            "version": "v2",
+            >>>        }
+            >>>    )
+
         """
         # 检查配置文件是否正确
         if (
@@ -34,16 +78,17 @@ class Filez(object):
             + config.get("version")
         )
 
-    def token(self, slug: str):
+    def token(self, slug: str) -> str:
         """获取用户token数据.
 
         Examples:
-            >>> token('slug')
+            >>> token('aiden')
+
         Args:
             slug:   登录用户名   例如：admin
 
         Returns:
-            用户token数据
+            用户的token数据
         """
         # 设置 Authorization
         authorization = base64.b64encode(
@@ -97,14 +142,14 @@ class Filez(object):
         """创建用户.
 
         Examples:
+            >>> user = UserInfo(
+            >>>     email="10025@qq.com",
+            >>>     mobile="13812342345",
+            >>>     password="123456",
+            >>>     user_name="user025",
+            >>>     user_slug="user025",
+            >>> )
             >>> user_create(user)
-
-        Args:
-            url:        filez创建用户的接口地址   例如：http://filez.xxx.cn:5555/v2/user
-            user:      用户信息
-
-        Returns:
-            用户信息
             {
                 "email": "111122@qq.com",
                 "errcode": 0,
@@ -117,6 +162,14 @@ class Filez(object):
                 "userName": "user011",
                 "userSlug": "user011"
             }
+
+
+        Args:
+            url:        filez创建用户的接口地址   例如：http://filez.xxx.cn:5555/v2/user
+            user:      用户信息
+
+        Returns:
+            用户信息
         """
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -145,14 +198,7 @@ class Filez(object):
         通过用户id或者用户slug获取用户信息
 
         Examples:
-            >>> user_info(uid, user_slug)
-
-        Args:
-            uid:        用户id
-            user_slug:  用户slug
-
-        Returns:
-            id 获取的用户信息
+            >>> user_info(uid=152)
             {
                 "email": "10025@qq.com",
                 "errcode": 0,
@@ -166,7 +212,7 @@ class Filez(object):
                 "userSlug": "user025"
             }"
 
-            user_slug 获取的用户信息
+            >>> user_info(user_slug="user025")
             {
                 "ctime": "2022-12-01 18:31:07",
                 "email": "10025@qq.com",
@@ -177,6 +223,14 @@ class Filez(object):
                 "uid": 152,
                 "userName": "user025"
             }
+
+        Args:
+            uid:        用户id
+            user_slug:  用户slug
+
+        Returns:
+            获取的用户信息
+
         """
 
         # url最后如果有/，则去掉
@@ -214,18 +268,11 @@ class Filez(object):
         """获取用户列表.
 
         Examples:
-            >>> user_list(page_num,page_size)
-
-        Args:
-            page_num:   页码 从0开始
-            page_size:  每页条数
-
-        Returns:
-            用户列表
+            >>> user_list(0,2)
             {
                 "errcode": 0,
                 "errmsg": "ok",
-                "total": 79,
+                "total": 2,
                 "userList": [
                     {
                         "email": "xx@qq.com",
@@ -249,6 +296,14 @@ class Filez(object):
                     }
                 ]
             }
+
+        Args:
+            page_num:   页码 从0开始
+            page_size:  每页条数
+
+        Returns:
+            用户列表
+
         """
 
         # url
@@ -275,16 +330,11 @@ class Filez(object):
     ############################# 团队相关接口 #############################
 
     @check_token
-    def team_list(self):
+    def team_list(self) -> dict:
         """获取团队列表.
 
         Examples:
             >>> team_list()
-
-        Args:
-
-        Returns:
-            团队列表
             {
                 "errcode": 0,
                 "errmsg": "ok",
@@ -308,6 +358,12 @@ class Filez(object):
                 ],
                 "total": 2
             }
+
+        Args:
+
+        Returns:
+            团队列表
+
         """
         url = self.base_url + "/api/team"
 
@@ -328,18 +384,11 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def team_info(self, tid: int):
+    def team_info(self, tid: int) -> dict:
         """获取团队信息.
 
         Examples:
-            >>> team_info(url,tid)
-
-        Args:
-            url:        filez获取团队信息的接口地址   例如：http://filez.xxx.com:3333/v2/api/team
-            tid:        团队id
-
-        Returns:
-            团队信息
+            >>> team_info(2)
             {
                 "description": "团队1",
                 "errcode": 0,
@@ -350,6 +399,14 @@ class Filez(object):
                 "quota": 1048576000,
                 "used": 40142023
             }
+
+        Args:
+            url:        filez获取团队信息的接口地址   例如：http://filez.xxx.com:3333/v2/api/team
+            tid:        团队id
+
+        Returns:
+            团队信息
+
         """
         # url
         url = self.base_url + "/api/team/" + str(tid)
@@ -372,19 +429,11 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def team_user_list(self, tid: int, page_num: int, page_size: int):
+    def team_user_list(self, tid: int, page_num: int, page_size: int) -> dict:
         """获取团队用户列表.
 
         Examples:
-            >>> team_user_list(tid,page_num,page_size)
-
-        Args:
-            tid:        团队id
-            page_num:   页码 从0开始
-            page_size:  每页条数
-
-        Returns:
-            团队用户列表
+            >>> team_user_list(2,0,2)
             {
                 "errcode": 0,
                 "errmsg": "ok",
@@ -414,6 +463,15 @@ class Filez(object):
                 ],
                 "total": 2
             }
+
+        Args:
+            tid:        团队id
+            page_num:   页码 从0开始
+            page_size:  每页条数
+
+        Returns:
+            团队用户列表
+
         """
         url = self.base_url + "/api/teamuser/"
 
@@ -446,19 +504,11 @@ class Filez(object):
 
     ############################# 文件相关接口 #############################
     @check_token
-    def file_list(self, path: str, page_num: int, page_size: int):
+    def file_list(self, path: str, page_num: int, page_size: int) -> dict:
         """获取文件列表
 
         Examples:
-            >>> file_list(path,page_num,page_size)
-
-        Args:
-            path:       文件路径
-            page_num:   页码 从0开始
-            page_size:  每页条数
-
-        Returns:
-            文件列表
+            >>> file_list("/demo1/aa1",0,2)
             {
                 "errcode": 0,
                 "errmsg": "ok",
@@ -506,6 +556,15 @@ class Filez(object):
                 ],
                 "total": 2
             }
+
+        Args:
+            path:       文件路径
+            page_num:   页码 从0开始
+            page_size:  每页条数
+
+        Returns:
+            文件列表
+
         """
         url = self.base_url + "/api/file"
 
@@ -540,15 +599,7 @@ class Filez(object):
         通过neid 或者 文件路径 获取文件信息
 
         Examples:
-            >>> file_info(neid,path)
-
-        Args:
-            neid:   文件neid
-            nsid:   空间id
-            path:   文件路径
-
-        Returns:
-            文件信息
+            >>> file_info(1599694982598365196)
             {
                 "errcode": 0,
                 "errmsg": "ok",
@@ -573,6 +624,40 @@ class Filez(object):
                     "updatorUid": 4
                 }
             }
+            >>> file_info(path="/demo1/aa1/xx.docx")
+            {
+                "errcode": 0,
+                "errmsg": "ok",
+                "fileModel": {
+                    "bookmarkId": null,
+                    "creator": "我",
+                    "creatorUid": 4,
+                    "deliveryCode": "",
+                    "desc": "",
+                    "dir": false,
+                    "isBookmark": false,
+                    "isTeam": null,
+                    "modified": "2022-12-05T17:19:39+0800",
+                    "neid": 1599694982598365196,
+                    "nsid": 1,
+                    "path": "/demo1/aa1/xx.docx",
+                    "pathType": "ent",
+                    "rev": "48a728b380074a20852eb27d2ada442c",
+                    "size": "200.9 KB",
+                    "supportPreview": true,
+                    "updator": "我",
+                    "updatorUid": 4
+                }
+            }
+
+        Args:
+            neid:   文件neid
+            nsid:   空间id
+            path:   文件路径
+
+        Returns:
+            文件信息
+
         """
         url = self.base_url + "/api/file"
 
@@ -622,7 +707,11 @@ class Filez(object):
         通过neid 删除文件
 
         Examples:
-            >>> file_delete(neid,nsid)
+            >>> file_delete("1596056484678996029",1)
+            {
+                "errcode": 0,
+                "errmsg": "ok"
+            }
 
         Args:
             neid:   文件neid
@@ -630,10 +719,7 @@ class Filez(object):
 
         Returns:
             删除结果
-            {
-                "errcode": 0,
-                "errmsg": "ok"
-            }
+
         """
         url = self.base_url + "/api/file"
 
@@ -670,15 +756,7 @@ class Filez(object):
         创建文件夹
 
         Examples:
-            >>> create_folder(path,path_type)
-
-        Args:
-            url:    filez创建文件夹的接口地址   例如：http://filez.xxx.com:333/v2/api/file/folder
-            path:   文件夹路径
-            nsid:   选择范围 ['ent', 'self'], ent 企业空间，self 个人空间
-
-        Returns:
-            创建结果
+            >>> create_folder("/demo2/dir1/dir2","ent")
             {
                 "creator": "",
                 "creatorUid": 4,
@@ -696,6 +774,14 @@ class Filez(object):
                 "updator": "",
                 "updatorUid": 4
             }
+
+        Args:
+            path:   文件夹路径
+            nsid:   选择范围 ['ent', 'self'], ent 企业空间，self 个人空间
+
+        Returns:
+            创建结果
+
         """
         url = self.base_url + "/api/file/folder"
 
@@ -730,16 +816,7 @@ class Filez(object):
         文件复制
 
         Examples:
-            >>> file_copy(from_nsid,from_neid,to_path,to_path_type)
-
-        Args:
-            from_nsid:  源文件空间id
-            from_neid:  源文件neid
-            to_path:    目标文件路径
-            to_path_type:   目标文件路径类型
-
-        Returns:
-            复制结果
+            >>> file_copy(1,"1564548230711087165","/demo3/dd2","ent")
             {
                 "creator": "我",
                 "creatorUid": 4,
@@ -757,6 +834,16 @@ class Filez(object):
                 "updator": "我",
                 "updatorUid": 4
             }
+
+        Args:
+            from_nsid:  源文件空间id
+            from_neid:  源文件neid
+            to_path:    目标文件路径
+            to_path_type:   目标文件路径类型
+
+        Returns:
+            复制结果
+
         """
         url = self.base_url + "/api/file/copy"
 
@@ -796,7 +883,11 @@ class Filez(object):
         文件移动
 
         Examples:
-            >>> file_move(from_nsid,from_neid,to_path,to_path_type)
+            >>> file_move(1,"1565591868459192393","/demo3/dd2","ent")
+            {
+                "errcode": 0,
+                "errmsg": "ok"
+            }
 
         Args:
             from_nsid:  源文件空间id
@@ -805,11 +896,7 @@ class Filez(object):
             to_path_type:   目标文件路径类型
 
         Returns:
-            移动结果
-            {
-                "errcode": 0,
-                "errmsg": "ok"
-            }
+            移动文件的结果
 
         """
         url = self.base_url + "/api/file/move"
@@ -848,15 +935,7 @@ class Filez(object):
         文件上传(单文件)
 
         Examples:
-            >>> file_upload(file_path, to_path, path_type)
-
-        Args:
-            file_path:  文件路径
-            to_path:    目标文件路径
-            path_type:  目标文件路径类型
-
-        Returns:
-            上传结果
+            >>> file_upload("E:/php_workspace_www/filez-python-sdk/mm.jpg","/file001/x1.jpg","ent") # noqa
             {
                 "creator": "",
                 "creatorUid": 4,
@@ -874,6 +953,15 @@ class Filez(object):
                 "updator": "",
                 "updatorUid": 4
             }
+
+        Args:
+            file_path:  文件路径
+            to_path:    目标文件路径
+            path_type:  目标文件路径类型
+
+        Returns:
+            上传结果
+
         """
         url = self.base_url + "/api/file/content"
 
@@ -917,7 +1005,11 @@ class Filez(object):
         文件重命名
 
         Examples:
-            >>> file_rename(nsid, from_neid, to_file_name)
+            >>> file_rename(1,"1605507933683060811","x1.jpg")
+            {
+                "errcode": 0,
+                "errmsg": "ok"
+            }
 
         Args:
             nsid:               文件空间id
@@ -926,10 +1018,7 @@ class Filez(object):
 
         Returns:
             重命名结果
-            {
-                "errcode": 0,
-                "errmsg": "ok"
-            }
+
         """
         url = self.base_url + "/api/file/rename"
 
@@ -963,14 +1052,7 @@ class Filez(object):
         文件历史版本
 
         Examples:
-            >>> file_history(nsid, neid)
-
-        Args:
-            nsid:   文件空间id
-            neid:   文件neid
-
-        Returns:
-            文件历史版本
+            >>> file_history(1,"1605453934825050149")
             {
                 "errcode": 0,
                 "errmsg": "ok",
@@ -1005,6 +1087,13 @@ class Filez(object):
                     }
                 ]
             }
+        Args:
+            nsid:   文件空间id
+            neid:   文件neid
+
+        Returns:
+            文件历史版本记录
+
         """
         url = self.base_url + "/api/file/" + str(neid) + "/revision?nsid=" + str(nsid)
 
@@ -1032,19 +1121,20 @@ class Filez(object):
         文件预览
 
         Examples:
-            >>> file_preview(nsid, neid)
+            >>> file_preview(1,"1605453934825050149")
+            {
+                "errcode": 0,
+                "errmsg": "ok",
+                "previewUrl": "https://filz.xx.com/preview/preview?nsid=123&neid=123&version=v1" # noqa
+            }
 
         Args:
             nsid:   文件空间id
             neid:   文件neid
 
         Returns:
-            文件预览
-            {
-                "errcode": 0,
-                "errmsg": "ok",
-                "previewUrl": "https://filz.xx.com/preview/preview?nsid=123&neid=123&version=v1" # noqa
-            }
+            文件预览信息
+
         """
         url = self.base_url + "/api/preview/" + str(neid) + "?nsid=" + str(nsid)
 
@@ -1072,19 +1162,14 @@ class Filez(object):
         文件下载
 
         Examples:
-            >>> file_download(nsid, neid)
-
+            >>> file_download(1,"1605453934825050149")
+            文件流
         Args:
             nsid:   文件空间id
             neid:   文件neid
 
         Returns:
             文件下载
-            {
-                "errcode": 0,
-                "errmsg": "ok",
-                "downloadUrl": "https://filz.xx.com/download?nsid=123&neid=123&version=v1"  # noqa
-            }
         """
         url = (
             self.base_url
@@ -1122,8 +1207,12 @@ class Filez(object):
         文件授权
 
         Examples:
-            >>> auth_create(nsid, path_type,neid, uid, privilege)
-
+            >>> auth_create(1,"ent","1605400413333360659",82,2005)
+            {
+                "authModelList": null,
+                "errcode": 0,
+                "errmsg": "ok"
+            }
         Args:
             nsid:       文件空间id
             path_type:  文件类型 [ent,self]
@@ -1132,12 +1221,7 @@ class Filez(object):
             privilege:  权限 预览: 2009,上传: 2007,下载: 2005,上传/下载: 2003,编辑: 2001,可见列表: 1011,禁止访问: 1000 # noqa
 
         Returns:
-            文件授权
-            {
-                "authModelList": null,
-                "errcode": 0,
-                "errmsg": "ok"
-            }
+            文件授权结果
         """
         url = self.base_url + "/api/auth/batch_create"
 
@@ -1187,16 +1271,7 @@ class Filez(object):
         文件取消授权
 
         Examples:
-            >>> auth_delete(nsid, path_type,neid, uid)
-
-        Args:
-            nsid:       文件空间id
-            path_type:  文件类型 [ent,self]
-            neid:       文件neid
-            uid:        用户id
-
-        Returns:
-            文件取消授权
+            >>> auth_delete(1,"ent","1605400413333360659",82)
             {
                 'errcode': 0,
                 'errmsg': 'ok',
@@ -1206,6 +1281,16 @@ class Filez(object):
                     'result': 'succeed'
                 }]
             }
+
+        Args:
+            nsid:       文件空间id
+            path_type:  文件类型 [ent,self]
+            neid:       文件neid
+            uid:        用户id
+
+        Returns:
+            文件取消授权结果
+
         """
         url = self.base_url + "/api/auth/batch_delete"
 
@@ -1243,15 +1328,7 @@ class Filez(object):
         文件授权列表
 
         Examples:
-            >>> auth_list(nsid, path_type,neid)
-
-        Args:
-            nsid:       文件空间id
-            path_type:  文件类型 [ent,self]
-            neid:       文件neid
-
-        Returns:
-            文件授权列表
+            >>> auth_list(1,"ent","1605400413333360659")
             {
                 "authFileList": [
                     {
@@ -1290,6 +1367,15 @@ class Filez(object):
                 "errcode": 0,
                 "errmsg": "ok"
             }
+
+        Args:
+            nsid:       文件空间id
+            path_type:  文件类型 [ent,self]
+            neid:       文件neid
+
+        Returns:
+            文件授权列表
+
         """
         url = self.base_url + "/api/auth/list"
 

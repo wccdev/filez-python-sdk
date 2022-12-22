@@ -1,4 +1,4 @@
-"""Top-level package for filez_python_sdk."""
+"""filez_python_sdk."""
 
 __author__ = """Aiden Lu"""
 __email__ = 'allaher@icloud.com'

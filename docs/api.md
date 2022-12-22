@@ -1,1 +1,3 @@
-::: filez_python_sdk
+::: filez
+
+::: filez.filez
