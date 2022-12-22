@@ -40,7 +40,7 @@
 Skeleton project created by Cookiecutter PyPackage
 
 
-* Documentation: <xx>
+* Documentation: <https://wccdev.github.io/filez-python-sdk/>
 * GitHub: <https://github.com/wccdev/filez-python-sdk>
 * PyPI: <xx>
 * Free software: MIT
