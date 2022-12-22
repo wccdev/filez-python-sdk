@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    <url>
+         <loc>https://wccdev.github.io/filez-python-sdk/</loc>
+         <lastmod>2022-12-22</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="https://wccdev.github.io/filez-python-sdk/"/>
+         
+         
+    </url>
+    <url>
+         <loc>https://wccdev.github.io/filez-python-sdk/api/</loc>
+         <lastmod>2022-12-22</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="https://wccdev.github.io/filez-python-sdk/en/api/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="https://wccdev.github.io/filez-python-sdk/zh/api/"/>
+         
+    </url>
+    <url>
+         <loc>https://wccdev.github.io/filez-python-sdk/changelog/</loc>
+         <lastmod>2022-12-22</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="https://wccdev.github.io/filez-python-sdk/en/changelog/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="https://wccdev.github.io/filez-python-sdk/zh/changelog/"/>
+         
+    </url>
+    <url>
+         <loc>https://wccdev.github.io/filez-python-sdk/contributing/</loc>
+         <lastmod>2022-12-22</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="https://wccdev.github.io/filez-python-sdk/en/contributing/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="https://wccdev.github.io/filez-python-sdk/zh/contributing/"/>
+         
+    </url>
+    <url>
+         <loc>https://wccdev.github.io/filez-python-sdk/installation/</loc>
+         <lastmod>2022-12-22</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="https://wccdev.github.io/filez-python-sdk/en/installation/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="https://wccdev.github.io/filez-python-sdk/zh/installation/"/>
+         
+    </url>
+    <url>
+         <loc>https://wccdev.github.io/filez-python-sdk/usage/</loc>
+         <lastmod>2022-12-22</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="https://wccdev.github.io/filez-python-sdk/en/usage/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="https://wccdev.github.io/filez-python-sdk/zh/usage/"/>
+         
+    </url>
+</urlset>
