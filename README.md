@@ -36,14 +36,45 @@
 </p>
 <h2></h2>
 
-## Quick start
+## 文档
+Skeleton project created by Cookiecutter PyPackage
 
-* TODO
+
+* Documentation: <xx>
+* GitHub: <https://github.com/wccdev/filez-python-sdk>
+* PyPI: <xx>
+* Free software: MIT
 
 
-## Features
+## 功能说明
 
-* TODO
+#### 用户相关接口
+    - user_create 创建用户
+    - user_info 获取用户信息
+    - user_list 获取用户列表
+
+#### 团队相关接口
+    - team_list 获取团队列表
+    - team_info 获取团队信息
+    - team_user_list 获取团队成员列表
+
+#### 文件相关接口
+    - file_list 获取指定目录的文件列表
+    - file_info 获取文件信息
+    - file_delete 删除文件
+    - create_folder 创建文件夹
+    - file_copy 复制文件
+    - file_move 移动文件
+    - file_upload 上传文件
+    - file_rename 重命名文件
+    - file_history 文件历史版本
+    - file_preview 文件预览
+    - file_download 文件下载
+
+#### 授权相关接口
+    - auth_create 文件授权
+    - auth_delete 取消文件授权
+    - auth_list 获取文件授权列表
 
 ## Credits
 
