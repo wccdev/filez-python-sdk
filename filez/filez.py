@@ -704,12 +704,12 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def file_delete(self, neid: str, nsid: int = 1) -> dict:
+    def file_delete(self, nsid: int, neid: str) -> dict:
         """
         通过neid 删除文件
 
         Examples:
-            >>> file_delete(neid="1596056484678996029",nsid=1)
+            >>> file_delete(nsid=1,neid="1596056484678996029")
             {
                 "errcode": 0,
                 "errmsg": "ok"
