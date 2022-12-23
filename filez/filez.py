@@ -37,52 +37,59 @@ import os
 import requests
 from urllib3 import encode_multipart_formdata
 
-from .schema import ConfigInfo, UserInfo
+from .schema import UserInfo
 
 
 class Filez(object):
-    def __init__(self, config: ConfigInfo):
+    def __init__(
+        self,
+        *args,
+        app_key: str,
+        app_secret: str,
+        https: bool = False,
+        host: str,
+        version: str = "v2",
+    ):
         """
         初始化
 
         Examples:
             >>> filez = Filez(
-            >>>        {
-            >>>            "app_key": "94b4b6c69e404c2896382d8e0c91121",
-            >>>            "app_secret": "51661ca0-38d1-4c87-8805-794211292",
-            >>>            "https": False,
-            >>>            "host": "filez.xxx.com:3333",
-            >>>            "version": "v2",
-            >>>        }
+            >>>            app_key = "94b4b6c69e404c2896382d8e0c91121",
+            >>>            app_secret = "51661ca0-38d1-4c87-8805-794211292",
+            >>>            https =  False,
+            >>>            host = "filez.xxx.com:3333",
+            >>>            version =  "v2",
             >>>    )
+
+        Args:
+            app_key:    应用的app_key
+            app_secret: 应用的app_secret
+            https:      是否使用https
+            host:       filez的 域名+端口 例如：filez.xxx.com:3333
+            version:    filez的API版本
 
         """
         # 检查配置文件是否正确
-        if (
-            not config.get("app_key")
-            or not config.get("app_secret")
-            or not config.get("host")
-        ):
-            raise Exception("配置文件错误")
+        if not app_key or not app_secret or not host:
+            raise Exception("app_key,app_secret,host不能为空")
 
-        self.config = config
+        self.app_key = app_key
+        self.app_secret = app_secret
+        self.https = https
+        self.host = host
+        self.version = version
+
         self.access_token = None
 
         # base_url
-        self.base_url = (
-            "http"
-            + ("s" if config.get("https") else "")
-            + "://"
-            + config.get("host")
-            + "/"
-            + config.get("version")
-        )
+        self.base_url = "http" + ("s" if https else "") + "://" + host + "/" + version
 
     def token(self, slug: str) -> str:
         """获取用户token数据.
 
         Examples:
-            >>> token('aiden')
+            >>> token(slug = 'aiden')
 
         Args:
             slug:   登录用户名   例如：admin
@@ -92,9 +99,7 @@ class Filez(object):
         """
         # 设置 Authorization
         authorization = base64.b64encode(
-            (
-                self.config.get("app_key", "") + ":" + self.config.get("app_secret", "")
-            ).encode("utf-8")
+            (self.app_key + ":" + self.app_secret).encode("utf-8")
         ).decode("utf-8")
 
         # 设置payload
@@ -165,7 +170,6 @@ class Filez(object):
 
 
         Args:
-            url:        filez创建用户的接口地址   例如：http://filez.xxx.cn:5555/v2/user
             user:      用户信息
 
         Returns:
@@ -193,7 +197,7 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def user_info(self, uid: int = None, user_slug: str = None) -> dict:
+    def user_info(self, *args, uid: int = None, user_slug: str = None) -> dict:
         """获取用户信息.
         通过用户id或者用户slug获取用户信息
 
@@ -264,11 +268,11 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def user_list(self, page_num: int, page_size: int) -> dict:
+    def user_list(self, *args, page_num: int, page_size: int) -> dict:
         """获取用户列表.
 
         Examples:
-            >>> user_list(0,2)
+            >>> user_list(page_num=0,page_size=2)
             {
                 "errcode": 0,
                 "errmsg": "ok",
@@ -359,7 +363,6 @@ class Filez(object):
                 "total": 2
             }
 
-        Args:
 
         Returns:
             团队列表
@@ -388,7 +391,7 @@ class Filez(object):
         """获取团队信息.
 
         Examples:
-            >>> team_info(2)
+            >>> team_info(tid=2)
             {
                 "description": "团队1",
                 "errcode": 0,
@@ -401,7 +404,6 @@ class Filez(object):
             }
 
         Args:
-            url:        filez获取团队信息的接口地址   例如：http://filez.xxx.com:3333/v2/api/team
             tid:        团队id
 
         Returns:
@@ -433,7 +435,7 @@ class Filez(object):
         """获取团队用户列表.
 
         Examples:
-            >>> team_user_list(2,0,2)
+            >>> team_user_list(tid=2,page_num=0,page_size=2)
             {
                 "errcode": 0,
                 "errmsg": "ok",
@@ -508,7 +510,7 @@ class Filez(object):
         """获取文件列表
 
         Examples:
-            >>> file_list("/demo1/aa1",0,2)
+            >>> file_list(path="/demo1/aa1",page=0,page_size=2)
             {
                 "errcode": 0,
                 "errmsg": "ok",
@@ -594,12 +596,12 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def file_info(self, neid: str = None, nsid: int = None, path: str = None) -> dict:
+    def file_info(self, neid: str = None, nsid: int = 1, path: str = None) -> dict:
         """获取文件信息
         通过neid 或者 文件路径 获取文件信息
 
         Examples:
-            >>> file_info(1599694982598365196)
+            >>> file_info(neid=1599694982598365196,nsid=1)
             {
                 "errcode": 0,
                 "errmsg": "ok",
@@ -702,12 +704,12 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def file_delete(self, neid: str = None, nsid: int = None) -> dict:
+    def file_delete(self, neid: str, nsid: int = 1) -> dict:
         """
         通过neid 删除文件
 
         Examples:
-            >>> file_delete("1596056484678996029",1)
+            >>> file_delete(neid="1596056484678996029",nsid=1)
             {
                 "errcode": 0,
                 "errmsg": "ok"
@@ -751,12 +753,12 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def create_folder(self, path: str, path_type: str = None) -> dict:
+    def create_folder(self, path: str, path_type: str = "ent") -> dict:
         """
         创建文件夹
 
         Examples:
-            >>> create_folder("/demo2/dir1/dir2","ent")
+            >>> create_folder(path="/demo2/dir1/dir2",path_type="ent")
             {
                 "creator": "",
                 "creatorUid": 4,
@@ -776,8 +778,8 @@ class Filez(object):
             }
 
         Args:
-            path:   文件夹路径
-            nsid:   选择范围 ['ent', 'self'], ent 企业空间，self 个人空间
+            path:        文件夹路径
+            path_type:   选择范围 ['ent', 'self'], ent 企业空间，self 个人空间
 
         Returns:
             创建结果
@@ -810,13 +812,13 @@ class Filez(object):
 
     @check_token
     def file_copy(
-        self, from_nsid: int, from_neid: str, to_path: str, to_path_type: str = None
+        self, from_nsid: int, from_neid: str, to_path: str, to_path_type: str = "ent"
     ) -> dict:
         """
         文件复制
 
         Examples:
-            >>> file_copy(1,"1564548230711087165","/demo3/dd2","ent")
+            >>> file_copy(from_nsid=1,from_neid="1564548230711087165",to_path="/demo3/dd2",to_path_type="ent") # noqa
             {
                 "creator": "我",
                 "creatorUid": 4,
@@ -877,13 +879,13 @@ class Filez(object):
 
     @check_token
     def file_move(
-        self, from_nsid: int, from_neid: str, to_path: str, to_path_type: str = None
+        self, from_nsid: int, from_neid: str, to_path: str, to_path_type: str = "ent"
     ) -> dict:
         """
         文件移动
 
         Examples:
-            >>> file_move(1,"1565591868459192393","/demo3/dd2","ent")
+            >>> file_move(from_nsid=1,from_neid="1565591868459192393",to_path="/demo3/dd2",to_path_type="ent") # noqa
             {
                 "errcode": 0,
                 "errmsg": "ok"
@@ -930,12 +932,12 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def file_upload(self, file_path: str, to_path: str, path_type: str = None) -> dict:
+    def file_upload(self, file_path: str, to_path: str, path_type: str = "ent") -> dict:
         """
         文件上传(单文件)
 
         Examples:
-            >>> file_upload("E:/php_workspace_www/filez-python-sdk/mm.jpg","/file001/x1.jpg","ent") # noqa
+            >>> file_upload(file_path="E:/php_workspace_www/filez-python-sdk/mm.jpg",to_path="/file001/x1.jpg",path_type="ent") # noqa
             {
                 "creator": "",
                 "creatorUid": 4,
@@ -1005,7 +1007,7 @@ class Filez(object):
         文件重命名
 
         Examples:
-            >>> file_rename(1,"1605507933683060811","x1.jpg")
+            >>> file_rename(nsid=1,from_neid="1605507933683060811",to_file_name="x1.jpg") # noqa
             {
                 "errcode": 0,
                 "errmsg": "ok"
@@ -1052,7 +1054,7 @@ class Filez(object):
         文件历史版本
 
         Examples:
-            >>> file_history(1,"1605453934825050149")
+            >>> file_history(nsid=1,neid="1605453934825050149")
             {
                 "errcode": 0,
                 "errmsg": "ok",
@@ -1121,7 +1123,7 @@ class Filez(object):
         文件预览
 
         Examples:
-            >>> file_preview(1,"1605453934825050149")
+            >>> file_preview(nsid=1,neid="1605453934825050149")
             {
                 "errcode": 0,
                 "errmsg": "ok",
@@ -1162,7 +1164,7 @@ class Filez(object):
         文件下载
 
         Examples:
-            >>> file_download(1,"1605453934825050149")
+            >>> file_download(nsid=1,neid="1605453934825050149")
             文件流
         Args:
             nsid:   文件空间id
@@ -1207,7 +1209,7 @@ class Filez(object):
         文件授权
 
         Examples:
-            >>> auth_create(1,"ent","1605400413333360659",82,2005)
+            >>> auth_create(nsid=1,path_type="ent",neid="1605400413333360659",uid=82,privilege=2005)
             {
                 "authModelList": null,
                 "errcode": 0,
@@ -1271,7 +1273,7 @@ class Filez(object):
         文件取消授权
 
         Examples:
-            >>> auth_delete(1,"ent","1605400413333360659",82)
+            >>> auth_delete(nsid=1,path_type="ent",neid="1605400413333360659",uid=82)
             {
                 'errcode': 0,
                 'errmsg': 'ok',
@@ -1328,7 +1330,7 @@ class Filez(object):
         文件授权列表
 
         Examples:
-            >>> auth_list(1,"ent","1605400413333360659")
+            >>> auth_list(nsid=1,path_type="ent",neid="1605400413333360659")
             {
                 "authFileList": [
                     {
