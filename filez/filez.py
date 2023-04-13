@@ -1201,15 +1201,16 @@ class Filez(object):
         return response.content
 
     ############################# 权限相关接口 #############################
+
     @check_token
     def auth_create(
-        self, nsid: int, path_type: str, neid: str, uid: int, privilege: int
+        self, nsid: int, path_type: str, neid: str, privileges: list
     ) -> dict:
         """
-        文件授权
+        文件批量授权 (privileges一次建议10个以内,如果过多,请分批次调用, Filez有长度限制)
 
         Examples:
-            >>> auth_create(nsid=1,path_type="ent",neid="1605400413333360659",uid=82,privilege=2005)
+            >>> auth_batch_create(nsid=1,path_type="ent",neid="1605400413333360659",privileges=[{"uid":82,"privilege":2009},{"uid":83,"privilege":2001}]) #noqa
             {
                 "authModelList": null,
                 "errcode": 0,
@@ -1219,8 +1220,8 @@ class Filez(object):
             nsid:       文件空间id
             path_type:  文件类型 [ent,self]
             neid:       文件neid
-            uid:        用户id
-            privilege:  权限 预览: 2009,上传: 2007,下载: 2005,上传/下载: 2003,编辑: 2001,可见列表: 1011,禁止访问: 1000 # noqa
+            privileges:  [{"uid":82,"privilege":2009},{"uid":83,"privilege":2001}]  uid为用户id,privilege为权限id
+                (权限说明 预览: 2009,上传: 2007,下载: 2005,上传/下载: 2003,编辑: 2001,可见列表: 1011,禁止访问: 1000) # noqa
 
         Returns:
             文件授权结果
@@ -1235,23 +1236,26 @@ class Filez(object):
         if path_type not in ['ent', 'self']:
             raise Exception("path_type参数错误")
 
-        if privilege not in [2009, 2007, 2005, 2003, 2001, 1011, 1000]:
-            raise Exception("privilege参数错误")
+        for item in privileges:
+            if item.get('privilege') not in [2009, 2007, 2005, 2003, 2001, 1011, 1000]:
+                raise Exception("privilege参数错误")
+
+        auth_list = []
+        for item in privileges:
+            auth_list.append(
+                {
+                    "agentId": item.get('uid'),
+                    "agentType": "user",
+                    "isSubteamInheritable": True,
+                    "privilegeType": item.get('privilege'),
+                }
+            )
 
         payload = {
             'nsid': nsid,
             'path_type': path_type,
             'file_list': json.dumps([{"neid": neid}]),
-            'auth_list': json.dumps(
-                [
-                    {
-                        "agentId": uid,
-                        "agentType": "user",
-                        "isSubteamInheritable": True,
-                        "privilegeType": privilege,
-                    }
-                ]
-            ),
+            'auth_list': json.dumps(auth_list),
         }
 
         try:
@@ -1268,12 +1272,12 @@ class Filez(object):
         return response.json()
 
     @check_token
-    def auth_delete(self, nsid: int, path_type: str, neid: str, uid: int) -> dict:
+    def auth_delete(self, nsid: int, path_type: str, neid: str, uids: list) -> dict:
         """
         文件取消授权
 
         Examples:
-            >>> auth_delete(nsid=1,path_type="ent",neid="1605400413333360659",uid=82)
+            >>> auth_delete(nsid=1,path_type="ent",neid="1605400413333360659",uids=[82,83]) # noqa
             {
                 'errcode': 0,
                 'errmsg': 'ok',
@@ -1304,11 +1308,21 @@ class Filez(object):
         if path_type not in ['ent', 'self']:
             raise Exception("path_type参数错误")
 
+        # 批量用户授权
+        user_list = []
+        for uid in uids:
+            user_list.append(
+                {
+                    "agentId": uid,
+                    "agentType": "user",
+                }
+            )
+
         payload = {
             'nsid': nsid,
             'path_type': path_type,
             'file_list': json.dumps([{"neid": neid}]),
-            'delete_list': json.dumps([{"agentId": uid, "agentType": "user"}]),
+            'delete_list': json.dumps(user_list),
         }
 
         try:
