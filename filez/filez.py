@@ -1292,7 +1292,7 @@ class Filez(object):
             nsid:       文件空间id
             path_type:  文件类型 [ent,self]
             neid:       文件neid
-            uid:        用户id
+            uids:        用户id列表
 
         Returns:
             文件取消授权结果
